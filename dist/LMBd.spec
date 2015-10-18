@@ -3,8 +3,8 @@ Group: Productivity/Networking/Other
 Summary: Led Message Board Driver Daemon
 URL: https://github.com/Fishwaldo/LEDMessageBoard
 License: GPL
-Version: 1.0
-Release: 1
+Version: 1.0.1445180435.6a453c9
+Release: 0
 BuildRequires: gcc-c++ cmake boost-devel boost-thread boost-log boost-filesystem
 
 Source0: LMBd-%{version}.tar.gz
@@ -23,16 +23,13 @@ cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -Dlib_dir=%{_libdir} -G "Unix Makefiles"
 make %{?_smp_mflags}
 
 %install
-make install DESTDIR=${RPM_BUILD_ROOT} 
+make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
 
 
 %files
 %defattr(-,root,root,-)
-#%{_prefix}/sbin/ozwlogapp
-#%{_prefix}/lib/systemd/system/*
+%{_prefix}/bin/LMBd
 #%doc README
-#%attr(775, ozwwebapp, ozwwebapp) %dir %{_localstatedir}/www/ozwwebapp/
-#%attr(775, ozwwebapp, ozwwebapp) %{_localstatedir}/www/ozwwebapp/
 #%config /etc/ozwwebapp/*
 
 %pre
