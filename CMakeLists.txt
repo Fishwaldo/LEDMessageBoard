@@ -42,8 +42,8 @@ set_target_properties(LMBd PROPERTIES OUTPUT_NAME LMBd)
 include(GNUInstallDirs)
 
 install(TARGETS LMBd RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-install(FILES config/LMBd.conf DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-install(FILES scripts/zabbix_stats.cfg DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+install(FILES config/LMBd.conf DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR})
+install(FILES scripts/zabbix_stats.cfg DESTINATION ${CMAKE_INSTALL_FULL_SYSCONFDIR})
 install(FILES scripts/zabbix_stats.py DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 
