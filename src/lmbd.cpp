@@ -93,7 +93,7 @@ int main()
 	std::vector<std::string> displayedmsgs;
 
 	try {
-		lmbctx->load("LMB.conf");
+		lmbctx->load("/etc/LMBd.conf");
 	} catch (...) {
 		BOOST_LOG_TRIVIAL(warning) << "Could Not Load Config File";
 	}

@@ -76,7 +76,7 @@ int cmd_save(struct cli_def *cli, const char *command, char *argv[], int argc)
 {
 	struct LMBCTX *lmbctx = (struct LMBCTX *)cli_get_context(cli);
 	boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
-	lmbctx->save("LMB.conf");
+	lmbctx->save("/etc/LMBd.conf");
 	cli_print(cli, "Saved Config");
 	BOOST_LOG_TRIVIAL(info) << "Saved Config From Terminal";
 	return CLI_OK;
