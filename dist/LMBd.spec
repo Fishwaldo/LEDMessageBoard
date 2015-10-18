@@ -19,7 +19,7 @@ Led Message Board Driver
 %setup -q
 
 %build
-cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_SYSCONFDIR=%{%_sysconfdir} -G "Unix Makefiles" . 
+cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} -G "Unix Makefiles" . 
 make %{?_smp_mflags}
 
 %install
