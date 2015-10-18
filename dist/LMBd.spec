@@ -29,6 +29,9 @@ make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
 %files
 %defattr(-,root,root,-)
 %{_prefix}/bin/LMBd
+%{_prefix}/bin/zabbix_stats.py
+%config /etc/LMBd.conf
+%config /etc/zabbix_stats.cfg
 #%doc README
 #%config /etc/ozwwebapp/*
 
