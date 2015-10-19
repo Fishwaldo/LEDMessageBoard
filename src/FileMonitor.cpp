@@ -34,7 +34,7 @@ Inotify inotify(IN_CLOSE_WRITE);
 void MonitorFiles(LMBCTX *lmbctx) {
 	while(true) {
 		FileSystemEvent event = inotify.getNextEvent();
-		BOOST_LOG_TRIVIAL(debug)  << "Event wd(" << event.wd << ") " << event.getMaskString() << " for " << event.path << " was triggered!";
+		LMB_LOG_DEBUG()  << "Event wd(" << event.wd << ") " << event.getMaskString() << " for " << event.path << " was triggered!";
 		boost::filesystem::ifstream ifs;
 		ifs.open(event.path, std::ios::in);
 		std::stringstream ss;
@@ -43,7 +43,7 @@ void MonitorFiles(LMBCTX *lmbctx) {
 		message.erase(std::remove(message.begin(), message.end(), '\n'), message.end());
 //		int messageid = boost::lexical_cast<int>(event.path.generic_string().at(event.path.generic_string().length()-1));
 		int messageid = event.wd;
-		BOOST_LOG_TRIVIAL(info) << "Message in Slot " << messageid << " was " << message;
+		LMB_LOG_INFO() << "Message in Slot " << messageid << " was " << message;
 		{
 			boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
 			lmbctx->driver->Init(lmbctx);
@@ -70,7 +70,7 @@ bool FileMonitor::init(LMBCTX *lmbctx) {
 				snprintf(filename, 255, "message-%d", i);
 				boost::filesystem::path messagefile = monpath;
 				messagefile /= filename;
-				BOOST_LOG_TRIVIAL(info) << "Creating Message File: " << messagefile;
+				LMB_LOG_INFO() << "Creating Message File: " << messagefile;
 				std::ofstream f{messagefile.c_str(), std::ios::app};
 				f.close();
 				inotify.watchFile(messagefile);
@@ -78,11 +78,11 @@ bool FileMonitor::init(LMBCTX *lmbctx) {
 
 
 		} else {
-			BOOST_LOG_TRIVIAL(error) << "Monitor Path is not a directory";
+			LMB_LOG_ERROR() << "Monitor Path is not a directory";
 			return false;
 		}
 	} else {
-		BOOST_LOG_TRIVIAL(error) << "Monitor Path does not exist";
+		LMB_LOG_ERROR() << "Monitor Path does not exist";
 		return false;
 	}
 

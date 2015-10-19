@@ -3,8 +3,6 @@ cmake_minimum_required (VERSION 2.8)
 project (LMBd)
 
 
-add_definitions(-DBOOST_LOG_DYN_LINK)
-
 option(LMB_DEBUG "Enable additional debugging information" OFF)
 
 if(LMB_DEBUG)
@@ -15,13 +13,27 @@ else()
     set(CMAKE_BUILD_TYPE Release)
 endif(LMB_DEBUG)
 
-add_executable(LMBd src/Driver-DX.cpp src/FileMonitor.cpp src/lmbcli.cpp src/lmbd.cpp
-src/serial/src/serial.cc src/serial/src/impl/unix.cc
-src/serial/src/impl/list_ports/list_ports_linux.cc src/libcli/libcli.c)
+add_executable(LMBd 
+	src/Driver-DX.cpp 
+	src/FileMonitor.cpp 
+	src/lmbcli.cpp 
+	src/lmbd.cpp
+	src/serial/src/serial.cc 
+	src/serial/src/impl/unix.cc
+	src/serial/src/impl/list_ports/list_ports_linux.cc 
+	src/libcli/libcli.c
+	src/LoggerCpp/Config.cpp
+ 	src/LoggerCpp/DateTime.cpp
+ 	src/LoggerCpp/Log.cpp
+ 	src/LoggerCpp/Logger.cpp
+ 	src/LoggerCpp/Manager.cpp
+ 	src/LoggerCpp/OutputConsole.cpp
+ 	src/LoggerCpp/OutputDebug.cpp
+ 	src/LoggerCpp/OutputFile.cpp)
 
 
 
-find_package(Boost REQUIRED COMPONENTS thread log filesystem)
+find_package(Boost REQUIRED COMPONENTS thread filesystem)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   target_link_libraries(LMBd -pthread ${Boost_LIBRARIES})

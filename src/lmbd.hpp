@@ -29,9 +29,6 @@
 #ifndef SRC_LMBD_HPP_
 #define SRC_LMBD_HPP_
 #include <boost/make_shared.hpp>
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/foreach.hpp>
@@ -40,11 +37,24 @@
 #include <boost/dynamic_bitset.hpp>
 #include "serial/serial.h"
 #include "libcli/libcli.h"
+#include "LoggerCpp/LoggerCpp.h"
 
 class iDriver;
 
 
+
+
+#define LMB_LOG_DEBUG() logger->debug()
+#define LMB_LOG_INFO() logger->info()
+#define LMB_LOG_WARN() logger->warning()
+#define LMB_LOG_ERROR() logger->error()
+
+
+extern LMB::Log::Logger *logger;
+
+
 struct LMBCTX {
+		LMB::Log::Config::Vector configList;
 		serial::Serial *sp;
 		boost::mutex io_mutex;
 		std::string port;
@@ -61,6 +71,7 @@ struct LMBCTX {
 		std::map<int, std::string> startupmsg;
 		std::vector<boost::shared_ptr<boost::thread> > Clients;
 		unsigned int max_cli;
+		bool consolelog;
 		void load(const std::string &filename)
 		{
 		    // Create empty property tree object
@@ -75,11 +86,16 @@ struct LMBCTX {
 
 		    // Use the default-value version of get to find the debug level.
 		    // Note that the default value is used to deduce the target type.
-		    debug_level = tree.get("debug.level", 0);
 		    username = tree.get<std::string>("username");
 		    password = tree.get<std::string>("password");
 		    enablepass = tree.get<std::string>("enablepass");
 		    monitorpath = tree.get<std::string>("monitorpath");
+		    if (tree.get<bool>("ConsoleLogging") == true) {
+		    	LMB::Log::Config::addOutput(configList, "OutputConsole");
+		    	consolelog = true;
+		    }
+		    logger->setLevel(LMB::Log::Log::toLevel(tree.get<std::string>("ConsoleLogLevel").c_str()));
+
 		    for (unsigned int i = 1; i <= this->messages; i++) {
 		    	std::stringstream ss;
 		    	ss << "startupmessage." << std::dec << i;
@@ -98,12 +114,12 @@ struct LMBCTX {
 		    // converted to a string. Note that the "debug" node is automatically
 		    // created if it doesn't exist.
 		    tree.put("serial.port", port);
-		    tree.put("debug.level", debug_level);
 		    tree.put("username", username);
 		    tree.put("password", password);
 		    tree.put("enablepass", enablepass);
 		    tree.put("monitorpath", monitorpath);
-
+		    tree.put("ConsoleLogging", consolelog);
+		    tree.put("ConsoleLogLevel", LMB::Log::Log::toString(logger->getLevel()));
 		    for (unsigned int i = 1; i <= this->messages; i++) {
 		    	std::stringstream ss;
 		    	ss << "startupmessage." << std::dec << i;

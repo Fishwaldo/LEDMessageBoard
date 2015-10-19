@@ -25,6 +25,7 @@
  */
 
 #include <stdio.h>
+#include <cstdio>
 #include <sys/types.h>
 #include <iostream>
 #include <iomanip>
@@ -51,7 +52,7 @@
 
 #define CLITEST_PORT                8000
 
-
+LMB::Log::Logger *logger = NULL;
 
 
 int main()
@@ -71,10 +72,10 @@ int main()
 	}
 #endif
 
-	boost::log::core::get()->set_filter
-			(
-					boost::log::trivial::severity >= boost::log::trivial::info
-			);
+	LMB::Log::Manager::setDefaultLevel(LMB::Log::Log::eInfo);
+
+
+	logger = new LMB::Log::Logger("LMBd");
 
 
 	struct LMBCTX *lmbctx = new LMBCTX;
@@ -94,9 +95,13 @@ int main()
 
 	try {
 		lmbctx->load("/etc/LMBd.conf");
-	} catch (...) {
-		BOOST_LOG_TRIVIAL(warning) << "Could Not Load Config File";
+	} catch (std::exception& e) {
+		std::cerr << "Could Not Load Config File " << e.what() << std::endl;
+		exit(-1);
 	}
+
+	LMB::Log::Manager::configure(lmbctx->configList);
+
 
 	lmbctx->driver->Init(lmbctx);
 	lmbctx->driver->StartUp();
@@ -118,7 +123,7 @@ int main()
 
 	if ((s = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
-		BOOST_LOG_TRIVIAL(error) << "Socket Error";
+		LMB_LOG_ERROR() << "Socket Error";
 		return 1;
 	}
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
@@ -129,23 +134,23 @@ int main()
 	addr.sin_port = htons(CLITEST_PORT);
 	if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) < 0)
 	{
-		BOOST_LOG_TRIVIAL(error) << "bind Error";
+		LMB_LOG_ERROR() << "bind Error";
 		return 1;
 	}
 
 	if (listen(s, 50) < 0)
 	{
-		BOOST_LOG_TRIVIAL(error) << "listen Error";
+		LMB_LOG_ERROR() << "listen Error";
 		return 1;
 	}
 
-	BOOST_LOG_TRIVIAL(info) << "Listening on port " << CLITEST_PORT;
+	LMB_LOG_INFO() << "Listening on port " << CLITEST_PORT;
 	while ((x = accept(s, NULL, 0)))
 	{
 		if (lmbctx->Clients.size() < lmbctx->max_cli) {
 			lmbctx->Clients.push_back(boost::make_shared<boost::thread>(Startcliloop, boost::ref(lmbctx), x));
 		} else {
-			BOOST_LOG_TRIVIAL(warning) << "Dropping Client Connection as we are at our Max";
+			LMB_LOG_WARN() << "Dropping Client Connection as we are at our Max";
 			close(x);
 		}
 	}

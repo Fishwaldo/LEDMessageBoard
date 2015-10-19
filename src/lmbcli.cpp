@@ -78,7 +78,7 @@ int cmd_save(struct cli_def *cli, const char *command, char *argv[], int argc)
 	boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
 	lmbctx->save("/etc/LMBd.conf");
 	cli_print(cli, "Saved Config");
-	BOOST_LOG_TRIVIAL(info) << "Saved Config From Terminal";
+	LMB_LOG_INFO() << "Saved Config From Terminal";
 	return CLI_OK;
 }
 
@@ -166,7 +166,7 @@ int cmd_set_port(struct cli_def *cli, UNUSED(const char *command), char *argv[],
 			boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
 
 			lmbctx->port = pii->port;
-			BOOST_LOG_TRIVIAL(info) << "Set a New Serial Port from Terminal: " << lmbctx->port;
+			LMB_LOG_INFO() << "Set a New Serial Port from Terminal: " << lmbctx->port;
 			return CLI_OK;
 		}
 	}
@@ -290,9 +290,9 @@ int Startcliloop(LMBCTX *lmbctx, int sockfd) {
 
 
 	cli_set_context(cli, (void*)lmbctx);
-	BOOST_LOG_TRIVIAL(info) << "accepted new CLI Connection";
+	LMB_LOG_INFO() << "accepted new CLI Connection";
 	cli_loop(cli, sockfd);
-	BOOST_LOG_TRIVIAL(info) << "closed CLI Connection";
+	LMB_LOG_INFO() << "closed CLI Connection";
 	cli_done(cli);
 	return 0;
 }

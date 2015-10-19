@@ -33,14 +33,14 @@ void doChkSum(uint8_t *data, uint8_t length) {
 	for (i = 1; i < length; i++) {
 		csum += data[i];
 	}
-	BOOST_LOG_TRIVIAL(trace) << "csum " << std::hex << (int)csum << " old " << std::hex << (int)data[i];
+	LMB_LOG_DEBUG() << "csum " << std::hex << (int)csum << " old " << std::hex << (int)data[i];
 	data[i] = csum;
 }
 void insertMessage(uint8_t part, uint8_t *data, std::string message) {
 	uint8_t startpos = 4;
 	uint8_t size = 60;
 	uint8_t messagestart = 0;
-	BOOST_LOG_TRIVIAL(trace) << "message length: " << std::dec << message.length();
+	LMB_LOG_DEBUG() << "message length: " << std::dec << message.length();
 	if (part == 1) {
 		startpos = 8;
 		data[7] = message.length();
@@ -58,7 +58,7 @@ void insertMessage(uint8_t part, uint8_t *data, std::string message) {
 	if ((message.length() - messagestart) < size)
 		size = (message.length() - messagestart);
 
-	BOOST_LOG_TRIVIAL(trace) <<  "size " << (int)message.length() << std::dec << " StartPos: " << (int)startpos << " size " << (int)size << " messagestart " << (int)messagestart ;
+	LMB_LOG_DEBUG() <<  "size " << (int)message.length() << std::dec << " StartPos: " << (int)startpos << " size " << (int)size << " messagestart " << (int)messagestart ;
 
 
 	if (size > message.length())
@@ -73,16 +73,16 @@ void insertMessage(uint8_t part, uint8_t *data, std::string message) {
 
 void printMessage(uint8_t *data, size_t length) {
 	std::stringstream ss;
-	BOOST_LOG_TRIVIAL(trace) <<  "Raw Message: ";
+	LMB_LOG_DEBUG() <<  "Raw Message: ";
 	for (unsigned int i = 0; i < length; ++i) {
 		ss << std::setw(2) << std::uppercase << std::hex << std::setfill('0') << (int)data[i] << " ";
 		if ((i+1) % 16 == 0) {
-			BOOST_LOG_TRIVIAL(trace) <<  ss.str();
+			LMB_LOG_DEBUG() <<  ss.str();
 			ss.str("");
 		}
 	}
 	if (ss.gcount() > 0)
-		BOOST_LOG_TRIVIAL(trace) <<  ss.str();
+		LMB_LOG_DEBUG() <<  ss.str();
 }
 
 void setMessageNumber(uint8_t *data, uint8_t pos, bool firstmsg) {
@@ -107,14 +107,19 @@ bool Driver_DX::Init(LMBCTX *lmbctx) {
 	this->lmbctx->sp->setRTS(true);
 	this->lmbctx->sp->setDTR(true);
 	/* construct the Message Header */
-	BOOST_LOG_TRIVIAL(trace) << "Port Open: " << this->lmbctx->sp->isOpen();
+	LMB_LOG_DEBUG() << "Port Open: " << this->lmbctx->sp->isOpen();
 	std::vector<uint8_t> data;
 	uint8_t start[] = { 0x54 };
 	this->lmbctx->sp->write(start, 1);
 	this->lmbctx->sp->flush();
 	std::string query = this->lmbctx->sp->read(1);
-	BOOST_LOG_TRIVIAL(trace) << "Reply to Inquiry: " << std::hex << query.at(1);
-	BOOST_LOG_TRIVIAL(trace) << "Send Out Start Sequence";
+	if (query.length() > 0) {
+		LMB_LOG_DEBUG() << "Reply to Inquiry: " << std::hex << query.at(0);
+	} else {
+		LMB_LOG_ERROR() << "No Reply to Inquiry";
+		return false;
+	}
+	LMB_LOG_DEBUG() << "Send Out Start Sequence";
 
 	this->lmbctx->sp->flush();
 	start[0] = 0x41;
@@ -139,12 +144,12 @@ bool Driver_DX::Init(LMBCTX *lmbctx) {
 bool Driver_DX::setMessage(int pos, std::string message) {
 
 	if (this->lmbctx->messages < (unsigned int)pos) {
-		BOOST_LOG_TRIVIAL(warning) << "Invalid Message Position " << pos;
+		LMB_LOG_WARN() << "Invalid Message Position " << pos;
 		return false;
 	}
 
 	if (message.length() > 250) {
-		BOOST_LOG_TRIVIAL(warning) << "Message is " << std::dec << message.length() << " chars long. Trimming to 250 Chars";
+		LMB_LOG_WARN() << "Message is " << std::dec << message.length() << " chars long. Trimming to 250 Chars";
 		message = message.substr(0, 250);
 	}
 
@@ -209,28 +214,28 @@ bool Driver_DX::setMessage(int pos, std::string message) {
 		for (int i = 0; i < 69; i++)
 			finalpck[1+69+69+69+i] = header4[i];
 		printMessage(finalpck, 277);
-		BOOST_LOG_TRIVIAL(trace) << "sending packets: ";
+		LMB_LOG_DEBUG() << "sending packets: ";
 		int sent = (int)this->lmbctx->sp->write(header1, 69);
-		BOOST_LOG_TRIVIAL(trace) << "size: " << std::dec << sent;
+		LMB_LOG_DEBUG() << "size: " << std::dec << sent;
 		usleep(100 * 1000);
 		sent = (int)this->lmbctx->sp->write(header2, 69);
-		BOOST_LOG_TRIVIAL(trace) << "size: " << std::dec << sent;
+		LMB_LOG_DEBUG() << "size: " << std::dec << sent;
 		usleep(100 * 1000);
 		sent = (int)this->lmbctx->sp->write(header3, 69);
-		BOOST_LOG_TRIVIAL(trace) << "size: " << std::dec << sent;
+		LMB_LOG_DEBUG() << "size: " << std::dec << sent;
 		usleep(100 * 1000);
 		sent =(int)this->lmbctx->sp->write(header4, 69);
-		BOOST_LOG_TRIVIAL(trace) << "size: " << std::dec << sent;
+		LMB_LOG_DEBUG() << "size: " << std::dec << sent;
 		usleep(100 * 1000);
 	} else {
-		BOOST_LOG_TRIVIAL(trace) << "Clearing Message " << pos;
+		LMB_LOG_DEBUG() << "Clearing Message " << pos;
 		this->lmbctx->displayedmsgs[pos] = "";
 		this->lmbctx->msgdisplay[pos-1] = 0;
 	}
 	uint8_t header5[] = { 0x02, 0x33, (uint8_t)this->lmbctx->msgdisplay.to_ulong() };
 	int sent = (int)this->lmbctx->sp->write(header5, 3);
-	BOOST_LOG_TRIVIAL(trace) << "size: " << std::dec << sent;
-	BOOST_LOG_TRIVIAL(info) << "Set Message " << pos << " to " << this->lmbctx->displayedmsgs[pos];
+	LMB_LOG_DEBUG() << "size: " << std::dec << sent;
+	LMB_LOG_INFO() << "Set Message " << pos << " to " << this->lmbctx->displayedmsgs[pos];
 
 	return true;
 }
@@ -270,6 +275,6 @@ bool Driver_DX::StartUp() {
 	uint8_t setTime[] = { 0x02, 0x34, InsertString(timePtr->tm_year -100), InsertString(timePtr->tm_mon +1), InsertString(timePtr->tm_mday), InsertString(timePtr->tm_hour), InsertString(timePtr->tm_min), InsertString(timePtr->tm_sec), InsertString(timePtr->tm_wday), 0x00 };
 	doChkSum(&setTime[0], 9);
 	int sent = (int)this->lmbctx->sp->write(setTime, 10);
-	BOOST_LOG_TRIVIAL(trace) << "Set Clock: " << std::dec << sent;
+	LMB_LOG_DEBUG() << "Set Clock: " << std::dec << sent;
 	return true;
 }
