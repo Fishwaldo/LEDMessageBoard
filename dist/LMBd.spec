@@ -5,7 +5,7 @@ URL: https://github.com/Fishwaldo/LEDMessageBoard
 License: GPL
 Version: 1.0.1445180435.6a453c9
 Release: 0
-BuildRequires: gcc-c++ cmake boost-devel boost-thread boost-log boost-filesystem
+BuildRequires: gcc-c++ cmake boost-devel boost-thread boost-filesystem
 
 Source0: LMBd-%{version}.tar.gz
 
