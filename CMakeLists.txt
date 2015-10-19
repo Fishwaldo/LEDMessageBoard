@@ -2,6 +2,9 @@ cmake_minimum_required (VERSION 2.8)
 
 project (LMBd)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/dist)
+INCLUDE(CheckLSBTypes)
+
 
 option(LMB_DEBUG "Enable additional debugging information" OFF)
 
@@ -31,6 +34,12 @@ add_executable(LMBd
  	src/LoggerCpp/OutputDebug.cpp
  	src/LoggerCpp/OutputFile.cpp)
 
+if (LSB_DISTRIBUTOR_ID STREQUAL "centos")
+if (LSB_RELEASE STREQUAL "6")
+message("Enabling CentOS 6 workaround for Boost")
+set(Boost_NO_BOOST_CMAKE ON)
+endif()
+endif()
 
 
 find_package(Boost REQUIRED COMPONENTS thread filesystem)
