@@ -26,7 +26,7 @@ make %{?_smp_mflags}
 make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
 mkdir -p ${RPM_BUILD_ROOT}/var/spool/LMBd
 mkdir -p ${RPM_BUILD_ROOT}/var/log/LMBd
-cp scripts/zabbix_stats.service %{_unitdir}
+cp scripts/zabbix-stats.service %{_unitdir}
 cp scripts/lmbd.service %{_unitdir}
 
 
