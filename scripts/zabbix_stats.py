@@ -11,22 +11,42 @@ import time
 import pprint
 import re
 import ConfigParser
+import getopt
+import sys
 
 
-pp = pprint.PrettyPrinter(indent=4)
-config = ConfigParser.ConfigParser()
-config.read('zabbix_stats.cfg')
+def main(argv):
+
+    cfgfile = "/etc/zabbix_stats.cfg"
+    try:
+        opts, args = getopt.getopt(argv, "hc:", ["configfile="])
+    except getopt.GetoptError:
+        print 'zabbix_stats.py -c <configfile>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print 'zabbix_stats.py -c <configfile>'
+            sys.exit(2)
+        elif opt in ("-c", "--configfile"):
+            cfgfile = arg
+
+    pp = pprint.PrettyPrinter(indent=4)
+    config = ConfigParser.ConfigParser()
+    config.read(cfgfile)
+
+    global zapi
+    zapi = ZabbixAPI(config.get('Server', 'zabbixurl'))
+    zapi.session.verify = False
+    # Login to the Zabbix API
+    zapi.login(config.get('Server', 'username'), config.get('Server', 'password'))
+
+    while(1):
+        Alerts()    
 
 
 
-# The hostname at which the Zabbix web interface is available
-ZABBIX_SERVER = 'http://10.1.1.7/zabbix/'
-
-zapi = ZabbixAPI(config.get('Server', 'zabbixurl'))
-zapi.session.verify = False
-# Login to the Zabbix API
-zapi.login(config.get('Server', 'username'), config.get('Server', 'password'))
 def Stats():
+    global zapi
     BWVals = {}
     results = {}
     BWVals['MikroTik'] = {'key':{'if*Octets[Wan2 - Client]', 'if*Octets[Wan1 - Server]'}, 'limit':10}
@@ -95,6 +115,7 @@ def Stats():
 
 def Alerts():
     # Get a list of all issues (AKA tripped triggers)
+    global zapi
     triggers = zapi.trigger.get(only_true=1,
         skipDependent=1,
         monitored=1,
@@ -131,5 +152,7 @@ def Alerts():
         f3.close()
         time.sleep(60)
     
-while(1):
-    Alerts()    
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

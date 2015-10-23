@@ -1,0 +1,16 @@
+[Unit]
+Description=lmbd
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=nobody
+Group=nobody
+ExecStart=/usr/bin/LMBd --config /etc/LMBd.conf
+
+# Give the script some time to startup
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target

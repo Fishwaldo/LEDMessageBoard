@@ -1,0 +1,17 @@
+[Unit]
+Description=Zabbix-Stats
+After=syslog.target
+After=network.target
+Requires=lmbd.service
+
+[Service]
+Type=simple
+User=nobody
+Group=nobody
+ExecStart=/usr/bin/python /usr/bin/zabbix_stats.py -c /etc/zabbix_stats.cfg
+
+# Give the script some time to startup
+TimeoutSec=300
+
+[Install]
+WantedBy=multi-user.target
