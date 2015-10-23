@@ -45,17 +45,47 @@ mkdir -p ${RPM_BUILD_ROOT}/var/log/LMBd
 
 
 %pre
-%service_add_pre zabbix-stat.service lmbd.service
+%if 0%{?suse_version}
+%service_add_pre zabbix-stats.service
+%service_add_pre lmbd.service
+%endif
+
 
 %post
 /sbin/ldconfig
-%service_add_post zabbix-stat.service lmbd.service
+%if 0%{?suse_version}
+%service_add_post zabbix-stats.service
+%service_add_post lmbd.service
+%endif
+%if 0%{?fedora} || 0%{?rhel} >= 7
+%systemd_post zabbix-stats.service
+%systemd_post lmbd.service
+%endif
+
 
 %preun
-%service_del_preun zabbix-stats.ervice lmbd.service
+%if 0%{?suse_version}
+%service_del_preun zabbix-stats.service
+%service_del_preun lmbd.service
+%endif
+%if 0%{?fedora} || 0%{?rhel} >= 7
+%systemd_preun zabbix-stats.service
+%systemd_preun lmbd.service
+%endif
+
+
 
 %postun
 /sbin/ldconfig
-%service_del_postun zabbix-stats.ervice lmbd.service
+%if 0%{?suse_version}
+%service_del_postun zabbix-stats.ervice
+%service_del_postun lmbd.service
+%endif
+%if 0%{?fedora} || 0%{?rhel} >= 7
+%systemd_postun zabbix-stats.service
+%systemd_postun lmbd.service
+%endif
+
+
 
 %changelog
