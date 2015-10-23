@@ -43,13 +43,19 @@ mkdir -p ${RPM_BUILD_ROOT}/var/log/LMBd
 #%doc README
 #%config /etc/ozwwebapp/*
 
-%pre
 
+%pre
+%service_add_pre zabbix-stat.service lmbd.service
 
 %post
 /sbin/ldconfig
+%service_add_post zabbix-stat.service lmbd.service
+
+%preun
+%service_del_preun zabbix-stats.ervice lmbd.service
 
 %postun
 /sbin/ldconfig
+%service_del_postun zabbix-stats.ervice lmbd.service
 
 %changelog
