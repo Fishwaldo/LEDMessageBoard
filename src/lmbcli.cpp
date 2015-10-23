@@ -136,6 +136,23 @@ int cmd_show_startupmsgs(struct cli_def *cli, const char *command, char *argv[],
 	return CLI_OK;
 }
 
+int cmd_show_logfiledir(struct cli_def *cli, const char *command, char *argv[], int argc)
+{
+
+	struct LMBCTX *lmbctx = (struct LMBCTX *)cli_get_context(cli);
+	boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
+	cli_print(cli, "logfiledir set to %s", lmbctx->logpath.c_str());
+	return CLI_OK;
+}
+
+int cmd_show_monitorpath(struct cli_def *cli, const char *command, char *argv[], int argc)
+{
+
+	struct LMBCTX *lmbctx = (struct LMBCTX *)cli_get_context(cli);
+	boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
+	cli_print(cli, "monitorpath set to %s", lmbctx->monitorpath.c_str());
+	return CLI_OK;
+}
 
 int cmd_set(struct cli_def *cli, const char *command, char *argv[], int argc)
 {
@@ -190,9 +207,64 @@ int cmd_set_startupmsg(struct cli_def *cli, UNUSED(const char *command), char *a
 	}
 	lmbctx->startupmsg[atoi(argv[0])] = std::string(argv[1]);
 
+	cli_print(cli, "Startup Message %d set to %s", atoi(argv[0]), argv[1]);
+
+
+
 	return CLI_OK;
 }
 
+int cmd_set_logfiledir(struct cli_def *cli, UNUSED(const char *command), char *argv[],
+		int argc)
+{
+	if (argc < 1) {
+		cli_print(cli, "usage: set logfiledir <dir>");
+		return CLI_OK;
+	}
+	struct LMBCTX *lmbctx = (struct LMBCTX *)cli_get_context(cli);
+	boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
+
+	boost::filesystem::path dir(argv[0]);
+	if (!boost::filesystem::exists(dir)) {
+		cli_print(cli, "Directory %s doesn't exist", argv[0]);
+		return CLI_OK;
+	}
+	if (!boost::filesystem::is_directory(dir)) {
+		cli_print(cli, "Path %s isn't a directory", argv[0]);
+		return CLI_OK;
+	}
+
+	lmbctx->logpath = argv[0];
+	cli_print(cli, "LogFileDir set to %s", argv[0]);
+
+	return CLI_OK;
+}
+
+int cmd_set_monitorpath(struct cli_def *cli, UNUSED(const char *command), char *argv[],
+		int argc)
+{
+	if (argc < 1) {
+		cli_print(cli, "usage: set monitorpath <dir>");
+		return CLI_OK;
+	}
+	struct LMBCTX *lmbctx = (struct LMBCTX *)cli_get_context(cli);
+	boost::unique_lock<boost::mutex> scoped_lock(lmbctx->io_mutex);
+
+	boost::filesystem::path dir(argv[0]);
+	if (!boost::filesystem::exists(dir)) {
+		cli_print(cli, "Directory %s doesn't exist", argv[0]);
+		return CLI_OK;
+	}
+	if (!boost::filesystem::is_directory(dir)) {
+		cli_print(cli, "Path %s isn't a directory", argv[0]);
+		return CLI_OK;
+	}
+
+	lmbctx->monitorpath = argv[0];
+	cli_print(cli, "monitorpath set to %s", argv[0]);
+
+	return CLI_OK;
+}
 
 
 int cmd_message(struct cli_def *cli, UNUSED(const char *command), UNUSED(char *argv[]), UNUSED(int argc)) {
@@ -275,6 +347,8 @@ int Startcliloop(LMBCTX *lmbctx, int sockfd) {
 
 	cli_register_command(cli, c, "port", cmd_set_port, PRIVILEGE_PRIVILEGED, MODE_EXEC, "Set Serial Port");
 	cli_register_command(cli, c, "startupmsg", cmd_set_startupmsg, PRIVILEGE_PRIVILEGED, MODE_EXEC, "Set Serial Port");
+	cli_register_command(cli, c, "logfilepath", cmd_set_logfiledir, PRIVILEGE_PRIVILEGED, MODE_EXEC, "Set Log File Directory");
+	cli_register_command(cli, c, "monitorpath", cmd_set_monitorpath, PRIVILEGE_PRIVILEGED, MODE_EXEC, "Set Monitor File Directory");
 
 	cli_register_command(cli, NULL, "save", cmd_save, PRIVILEGE_PRIVILEGED, MODE_EXEC, "Save Config");
 
@@ -284,6 +358,10 @@ int Startcliloop(LMBCTX *lmbctx, int sockfd) {
 	cli_register_command(cli, c, "port", cmd_show_port, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Show Configured Serial Port");
 	cli_register_command(cli, c, "messages", cmd_show_messages, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Show Current Messages");
 	cli_register_command(cli, c, "startupmsg", cmd_show_startupmsgs, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Show Current Messages");
+	cli_register_command(cli, c, "logfiledir", cmd_show_logfiledir, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Show LogFile Directory");
+	cli_register_command(cli, c, "monitorpath", cmd_show_monitorpath, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Show Monitor file Directory");
+
+
 
 	cli_register_command(cli, NULL, "message", cmd_message, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Set a Message to be displayed");
 	cli_register_command(cli, NULL, "clear", cmd_clear, PRIVILEGE_UNPRIVILEGED, MODE_EXEC, "Clear a Message");

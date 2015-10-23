@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <boost/program_options.hpp>
 #include "libcli/libcli.h"
 #include "serial/serial.h"
 #include "lmbd.hpp"
@@ -50,17 +51,25 @@
 #include "FileMonitor.hpp"
 
 
+
 #define CLITEST_PORT                8000
 
 LMB::Log::Logger *logger = NULL;
 
 
-int main()
+int main (int ac, char **av)
 {
-
 	int s, x;
+	bool fork = true;
 	struct sockaddr_in addr;
 	int on = 1;
+	boost::program_options::options_description desc("Allowed Options");
+
+	desc.add_options()
+		("help", "Command Line Options")
+		("config", boost::program_options::value<std::string>(), "config file")
+		("debug", boost::program_options::value<int>(), "Debug Level")
+	;
 
 #ifndef WIN32
 	signal(SIGCHLD, SIG_IGN);
@@ -72,11 +81,34 @@ int main()
 	}
 #endif
 
-	LMB::Log::Manager::setDefaultLevel(LMB::Log::Log::eInfo);
+
+	boost::program_options::variables_map vm;
+	boost::program_options::store(boost::program_options::parse_command_line(ac, av, desc), vm);
+	boost::program_options::notify(vm);
+	if (vm.count("help")) {
+		std::cout << desc << std::endl;
+		return 1;
+	}
+
+	boost::filesystem::path cfgpath;
+	if (vm.count("config")) {
+		cfgpath = vm["config"].as<std::string>();
+	} else {
+		cfgpath = "/etc/LMBd.conf";
+	}
+	if (!boost::filesystem::exists(cfgpath)) {
+		std::cerr << "Can't find Config File at path " << cfgpath << std::endl;
+		return -1;
+	}
+
+	if (vm.count("debug")) {
+		fork = false;
+		LMB::Log::Manager::setDefaultLevel(LMB::Log::Log::eDebug);
+	} else
+		LMB::Log::Manager::setDefaultLevel(LMB::Log::Log::eInfo);
 
 
 	logger = new LMB::Log::Logger("LMBd");
-
 
 	struct LMBCTX *lmbctx = new LMBCTX;
 
@@ -88,13 +120,15 @@ int main()
 	lmbctx->password = "password";
 	lmbctx->enablepass = "enable";
 	lmbctx->max_cli = 5;
-	lmbctx->monitorpath = "/tmp/test/";
+	lmbctx->monitorpath = "/var/spool/LMBd/";
 	lmbctx->messages = 6;
 	lmbctx->msgdisplay.resize(6);
+	lmbctx->logpath = "/var/log/LMBd";
+	lmbctx->maxlogfilesize = 1024*1024;
 	std::vector<std::string> displayedmsgs;
 
 	try {
-		lmbctx->load("/etc/LMBd.conf");
+		lmbctx->load(cfgpath.native());
 	} catch (std::exception& e) {
 		std::cerr << "Could Not Load Config File " << e.what() << std::endl;
 		exit(-1);

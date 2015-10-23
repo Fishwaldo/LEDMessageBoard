@@ -35,12 +35,23 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/dynamic_bitset.hpp>
+#include <boost/filesystem.hpp>
 #include "serial/serial.h"
 #include "libcli/libcli.h"
 #include "LoggerCpp/LoggerCpp.h"
 
 class iDriver;
 
+
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
 
 
 
@@ -72,6 +83,8 @@ struct LMBCTX {
 		std::vector<boost::shared_ptr<boost::thread> > Clients;
 		unsigned int max_cli;
 		bool consolelog;
+		std::string logpath;
+		size_t maxlogfilesize;
 		void load(const std::string &filename)
 		{
 		    // Create empty property tree object
@@ -82,24 +95,50 @@ struct LMBCTX {
 
 		    // Use the throwing version of get to find the debug filename.
 		    // If the path cannot be resolved, an exception is thrown.
-		    port= tree.get<std::string>("serial.port");
+			port= tree.get<std::string>("serial.port", "/dev/ttyUSB0");
 
 		    // Use the default-value version of get to find the debug level.
 		    // Note that the default value is used to deduce the target type.
-		    username = tree.get<std::string>("username");
-		    password = tree.get<std::string>("password");
-		    enablepass = tree.get<std::string>("enablepass");
-		    monitorpath = tree.get<std::string>("monitorpath");
-		    if (tree.get<bool>("ConsoleLogging") == true) {
+		    username = tree.get<std::string>("username", "admin");
+		    password = tree.get<std::string>("password", "password");
+		    enablepass = tree.get<std::string>("enablepass", "password");
+		    boost::filesystem::path monpath(tree.get<std::string>("monitorpath", "/var/spool/LMBd"));
+	    	if (boost::filesystem::exists(monpath) && boost::filesystem::is_directory(monpath)) {
+			    monitorpath = tree.get<std::string>("monitorpath", "/var/spool/LMBd");
+	    	} else {
+	    		throw std::runtime_error("monitorpath does not exist, or isn't a directory");
+	    	}
+		    if (tree.get<bool>("ConsoleLogging", false) == true) {
 		    	LMB::Log::Config::addOutput(configList, "OutputConsole");
 		    	consolelog = true;
 		    }
-		    logger->setLevel(LMB::Log::Log::toLevel(tree.get<std::string>("ConsoleLogLevel").c_str()));
+
+		    if (tree.get<std::string>("LogPath", "/var/log/LMBd/").length() > 0) {
+		    	boost::filesystem::path dir(tree.get<std::string>("LogPath", "/var/log/LMBd/"));
+		    	if (boost::filesystem::exists(dir) && boost::filesystem::is_directory(dir)) {
+		    		logpath = tree.get<std::string>("LogPath", "/var/log/LMBd/");
+		    		logpath += "/LMBd.Log";
+		    	} else {
+		    		throw std::runtime_error("LogPath does not exist, or isn't a directory");
+		    	}
+		    }
+
+			LMB::Log::Config::addOutput(configList, "OutputFile");
+			LMB::Log::Config::setOption(configList, "filename", logpath.c_str());
+			std::string oldlogpath(logpath);
+			oldlogpath += ".old";
+			LMB::Log::Config::setOption(configList, "filename_old", oldlogpath.c_str());
+			LMB::Log::Config::setOption(configList, "max_startup_size",  "0");
+			maxlogfilesize = tree.get<size_t>("MaxLogFileSize", 1024*1024);
+
+			LMB::Log::Config::setOption(configList, "max_size", patch::to_string(maxlogfilesize).c_str());
+
+		    logger->setLevel(LMB::Log::Log::toLevel(tree.get<std::string>("ConsoleLogLevel", "Warning").c_str()));
 
 		    for (unsigned int i = 1; i <= this->messages; i++) {
 		    	std::stringstream ss;
 		    	ss << "startupmessage." << std::dec << i;
-		    	this->startupmsg[i] = tree.get<std::string>(ss.str());
+		    	this->startupmsg[i] = tree.get<std::string>(ss.str(), "");
 		    }
 
 
@@ -120,6 +159,8 @@ struct LMBCTX {
 		    tree.put("monitorpath", monitorpath);
 		    tree.put("ConsoleLogging", consolelog);
 		    tree.put("ConsoleLogLevel", LMB::Log::Log::toString(logger->getLevel()));
+		    tree.put("LogPath", logpath);
+		    tree.put("MaxLogFileSize", maxlogfilesize);
 		    for (unsigned int i = 1; i <= this->messages; i++) {
 		    	std::stringstream ss;
 		    	ss << "startupmessage." << std::dec << i;

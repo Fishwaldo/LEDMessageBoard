@@ -42,7 +42,7 @@ endif()
 endif()
 
 
-find_package(Boost REQUIRED COMPONENTS thread filesystem)
+find_package(Boost REQUIRED COMPONENTS thread filesystem program_options)
 if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   target_link_libraries(LMBd -pthread ${Boost_LIBRARIES})

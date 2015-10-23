@@ -5,7 +5,7 @@ URL: https://github.com/Fishwaldo/LEDMessageBoard
 License: GPL
 Version: 1.0.1445180435.6a453c9
 Release: 0
-BuildRequires: gcc-c++ cmake boost-devel boost-thread boost-filesystem
+BuildRequires: gcc-c++ cmake boost-devel boost-thread boost-filesystem boost-program-options
 
 Source0: LMBd-%{version}.tar.gz
 
@@ -24,7 +24,8 @@ make %{?_smp_mflags}
 
 %install
 make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
-
+mkdir /var/spool/LMBd
+mkdir /var/log/LMBd
 
 %files
 %defattr(-,root,root,-)
@@ -32,6 +33,8 @@ make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
 %{_prefix}/bin/zabbix_stats.py
 %config /etc/LMBd.conf
 %config /etc/zabbix_stats.cfg
+%dir /var/spool/LMBd
+%dir /var/log/LMBd
 #%doc README
 #%config /etc/ozwwebapp/*
 
