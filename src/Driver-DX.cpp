@@ -272,9 +272,10 @@ bool Driver_DX::StartUp() {
 	std::stringstream ss;
 	time_t t = time(NULL);
 	tm* timePtr = localtime(&t);
-	uint8_t setTime[] = { 0x02, 0x34, InsertString(timePtr->tm_year -100), InsertString(timePtr->tm_mon +1), InsertString(timePtr->tm_mday), InsertString(timePtr->tm_hour), InsertString(timePtr->tm_min), InsertString(timePtr->tm_sec), InsertString(timePtr->tm_wday), 0x00 };
-	doChkSum(&setTime[0], 9);
-	int sent = (int)this->lmbctx->sp->write(setTime, 10);
+/*	uint8_t setTime[10] = { 0x02, 0x34, InsertString(timePtr->tm_year -100), InsertString(timePtr->tm_mon +1), InsertString(timePtr->tm_mday), InsertString(timePtr->tm_hour), InsertString(timePtr->tm_min), InsertString(timePtr->tm_sec), InsertString(timePtr->tm_wday), 0x00 };
+#	doChkSum(&setTime[0], 9);
+#	int sent = (int)this->lmbctx->sp->write(setTime, 10);
 	LMB_LOG_DEBUG() << "Set Clock: " << std::dec << sent;
+*/
 	return true;
 }

@@ -6,8 +6,8 @@ Requires=lmbd.service
 
 [Service]
 Type=simple
-User=nobody
-Group=nobody
+User=root
+Group=root
 ExecStart=/usr/bin/python /usr/bin/zabbix_stats.py -c /etc/zabbix_stats.cfg
 
 # Give the script some time to startup
