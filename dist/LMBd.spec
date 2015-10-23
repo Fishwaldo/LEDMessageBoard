@@ -24,8 +24,8 @@ make %{?_smp_mflags}
 
 %install
 make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
-mkdir ${RPM_BUILD_ROOT}/var/spool/LMBd
-mkdir ${RPM_BUILD_ROOT}/var/log/LMBd
+mkdir -p ${RPM_BUILD_ROOT}/var/spool/LMBd
+mkdir -p ${RPM_BUILD_ROOT}/var/log/LMBd
 
 %files
 %defattr(-,root,root,-)
