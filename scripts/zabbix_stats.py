@@ -30,6 +30,7 @@ def main(argv):
         elif opt in ("-c", "--configfile"):
             cfgfile = arg
 
+    global pp
     pp = pprint.PrettyPrinter(indent=4)
     config = ConfigParser.ConfigParser()
     config.read(cfgfile)
@@ -108,14 +109,13 @@ def Stats():
         results['H2216-N3']['bb_inlet_temp']['average'],
         results['H2216-N3']['exit_air_temp']['average'],
     ))
-    f1=open('/tmp/test/message-2', 'w')
+    f1=open('/var/spool/LMBd/message-2', 'w')
     if len(stats) > 0:
         f1.write(stats)
     f1.close()
 
 def Alerts():
     # Get a list of all issues (AKA tripped triggers)
-    global zapi
     triggers = zapi.trigger.get(only_true=1,
         skipDependent=1,
         monitored=1,
@@ -127,7 +127,6 @@ def Alerts():
         sortfield='priority',
         sortorder='DESC',
     )
-
     prioritylist = ['N/A', 'Info', 'Warn', 'Average', 'High', 'Critical']
     errorlist = []
     for t in triggers:
@@ -136,21 +135,25 @@ def Alerts():
                 t['description'],
                 prioritylist[int(t['priority'])])
             ))
-    for i in range(0, len(errorlist),3):
+    if (len(errorlist) == 0):
         Stats()
-        f1=open('/tmp/test/message-3', 'w')
-        if i < len(errorlist):
-            f1.write(errorlist[i])
-        f1.close()
-        f2=open('/tmp/test/message-4', 'w')
-        if i+1 < len(errorlist):
-            f2.write(errorlist[i+1])
-        f2.close()
-        f3=open('/tmp/test/message-5', 'w')
-        if i+2 < len(errorlist):
-            f3.write(errorlist[i+2])
-        f3.close()
         time.sleep(60)
+    else:
+        for i in range(0, len(errorlist),3):
+            Stats()
+            f1=open('/var/spool/LMBd/message-3', 'w')
+            if i < len(errorlist):
+                f1.write(errorlist[i])
+                f1.close()
+            f2=open('/var/spool/LMBd/message-4', 'w')
+            if i+1 < len(errorlist):
+                f2.write(errorlist[i+1])
+            f2.close()
+            f3=open('/var/spool/LMBd/message-5', 'w')
+            if i+2 < len(errorlist):
+                f3.write(errorlist[i+2])
+            f3.close()
+            time.sleep(60)
     
 
 
