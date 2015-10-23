@@ -23,7 +23,7 @@ cmake -DCMAKE_INSTALL_PREFIX=%{_prefix} -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir
 make %{?_smp_mflags}
 
 %install
-make install DESTDIR=${RPM_BUILD_ROOT} && cd ..
+make install DESTDIR=${RPM_BUILD_ROOT}
 mkdir -p ${RPM_BUILD_ROOT}/var/spool/LMBd
 mkdir -p ${RPM_BUILD_ROOT}/var/log/LMBd
 cp scripts/zabbix-stats.service %{_unitdir}
