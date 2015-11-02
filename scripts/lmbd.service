@@ -8,6 +8,7 @@ Type=simple
 User=root
 Group=root
 ExecStart=/usr/bin/LMBd --config /etc/LMBd.conf
+Restart=always
 
 # Give the script some time to startup
 TimeoutSec=300
